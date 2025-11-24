@@ -146,6 +146,7 @@ addStationForm.addEventListener("submit", async (e) => {
   }
 });
 
+
 // ---------- BOOKINGS (Firestore: bookings collection) ----------
 function loadBookings() {
   if (!bookingsTable) {
@@ -153,7 +154,6 @@ function loadBookings() {
     return;
   }
 
-  // Live updates with onSnapshot
   const bookingsRef = collection(db, "bookings");
 
   onSnapshot(
@@ -172,15 +172,46 @@ function loadBookings() {
         return;
       }
 
+      // Collect into array first
+      const bookings = [];
       snapshot.forEach((docSnap) => {
-        const data = docSnap.data();
+        bookings.push({
+          id: docSnap.id,
+          ...docSnap.data(),
+        });
+      });
 
+      // Sort by createdAt (newest first)
+      bookings.sort((a, b) => {
+        const da = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const db = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return db - da; // descending
+      });
+
+      // Render rows
+      bookings.forEach((data) => {
         const email = data.email || "N/A";
         const start = data.start || data.source || "-";
         const dest = data.destination || data.dest || "-";
-        const distance = data.distance || data.dist || "-";
-        const duration = data.durationHours || data.time || "-";
 
+        // distance pretty formatting
+        let distance = data.distance || data.dist || "-";
+        if (distance !== "-" && !isNaN(distance)) {
+          distance = Number(distance).toFixed(1);
+        }
+
+        // duration: handle new (hours) + old (minutes)
+        let durationDisplay = "-";
+        if (typeof data.durationHours !== "undefined") {
+          const dh = Number(data.durationHours);
+          durationDisplay = isNaN(dh) ? data.durationHours : dh.toFixed(1) + " hrs";
+        } else if (typeof data.durationMinutes !== "undefined") {
+          durationDisplay = data.durationMinutes + " mins";
+        } else if (typeof data.time !== "undefined") {
+          durationDisplay = data.time + " mins";
+        }
+
+        // createdAt nice formatting
         let createdAt = "-";
         if (data.createdAt) {
           const d = new Date(data.createdAt);
@@ -195,7 +226,7 @@ function loadBookings() {
           <td>${start}</td>
           <td>${dest}</td>
           <td>${distance}</td>
-          <td>${duration}</td>
+          <td>${durationDisplay}</td>
           <td>${createdAt}</td>
         `;
         bookingsTable.appendChild(row);
