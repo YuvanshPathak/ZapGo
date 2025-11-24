@@ -1,168 +1,20 @@
-// // Tabs functionality
-// const tabs = document.querySelectorAll(".sidebar ul li");
-// const tabContents = document.querySelectorAll(".tab-content");
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+} from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-// tabs.forEach((tab, index) => {
-//     tab.addEventListener("click", () => {
-//         // Remove active class from all tabs and content
-//         tabs.forEach((t) => t.classList.remove("active"));
-//         tabContents.forEach((tc) => tc.classList.remove("active"));
-
-//         // Add active class to clicked tab and corresponding content
-//         tab.classList.add("active");
-//         tabContents[index].classList.add("active");
-//     });
-// });
-
-// // Firebase configuration (Replace these values with your Firebase project settings)
-// // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-// const firebaseConfig = {
-//   apiKey: "AIzaSyB_d-uzdhnhA_MNtLRNxI_9Cq2Eq3qpdGA",
-//   authDomain: "zapgo-admin-app.firebaseapp.com",
-//   projectId: "zapgo-admin-app",
-//   storageBucket: "zapgo-admin-app.firebasestorage.app",
-//   messagingSenderId: "109873838158",
-//   appId: "1:109873838158:web:b7d723030c2f447628ab1f",
-// };
-
-// // Initialize Firebase
-// firebase.initializeApp(firebaseConfig);
-// const database = firebase.database();
-
-// // DOM Elements
-// const usersTable = document.getElementById("usersTable");
-
-// // Fetch and display registered users from Firebase
-// function fetchUsersFromFirebase() {
-//     const usersRef = database.ref("users"); // Assuming "users" is the node in the database
-//     usersRef.on("value", (snapshot) => {
-//         usersTable.innerHTML = ""; // Clear the table before populating
-//         snapshot.forEach((childSnapshot) => {
-//             const user = childSnapshot.val();
-//             const row = document.createElement("tr");
-//             row.innerHTML = `
-//                 <td>${childSnapshot.key}</td> <!-- User ID -->
-//                 <td>${user.name}</td>
-//                 <td>${user.email}</td>
-//                 <td>
-//                     <button class="delete-btn" onclick="deleteUser('${childSnapshot.key}')">Delete</button>
-//                 </td>
-//             `;
-//             usersTable.appendChild(row);
-//         });
-//     });
-// }
-
-// // Delete a user from Firebase
-// function deleteUser(userId) {
-//     if (confirm("Are you sure you want to delete this user?")) {
-//         database
-//             .ref("users/" + userId)
-//             .remove()
-//             .then(() => alert("User deleted successfully!"))
-//             .catch((error) => alert("Error deleting user: " + error.message));
-//     }
-// }
-
-// // Charging stations management
-// const addStationForm = document.getElementById("addStationForm");
-// const stationsList = document.getElementById("stationsList");
-
-// addStationForm.addEventListener("submit", (e) => {
-//     e.preventDefault();
-//     const stationName = document.getElementById("stationName").value;
-//     const stationLocation = document.getElementById("stationLocation").value;
-
-//     // Add station to Firebase (you can replace this with Firebase logic)
-//     const stationRef = database.ref("stations").push();
-//     stationRef
-//         .set({
-//             name: stationName,
-//             location: stationLocation,
-//         })
-//         .then(() => {
-//             const listItem = document.createElement("li");
-//             listItem.textContent = `${stationName} - ${stationLocation}`;
-//             stationsList.appendChild(listItem);
-
-//             // Clear form fields
-//             addStationForm.reset();
-//         })
-//         .catch((error) => alert("Error adding station: " + error.message));
-// });
-
-// // Fetch and display charging stations (optional)
-// function fetchStationsFromFirebase() {
-//     const stationsRef = database.ref("stations");
-//     stationsRef.on("value", (snapshot) => {
-//         stationsList.innerHTML = ""; // Clear the list before populating
-//         snapshot.forEach((childSnapshot) => {
-//             const station = childSnapshot.val();
-//             const listItem = document.createElement("li");
-//             listItem.textContent = `${station.name} - ${station.location}`;
-//             stationsList.appendChild(listItem);
-//         });
-//     });
-// }
-
-// // Logout functionality
-// document.getElementById("logoutBtn").addEventListener("click", () => {
-//     window.location.href = "login.html"; // Redirect to login page
-// });
-
-// // Statistics (Placeholder for chart.js or any other library)
-// document.addEventListener("DOMContentLoaded", () => {
-//     const ctx = document.getElementById("statsChart").getContext("2d");
-
-//     // Dummy chart using Chart.js (Add the library in the future for real data)
-//     new Chart(ctx, {
-//         type: "bar",
-//         data: {
-//             labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-//             datasets: [
-//                 {
-//                     label: "Bookings",
-//                     data: [10, 15, 7, 20, 30, 25],
-//                     backgroundColor: "#1fb800",
-//                 },
-//             ],
-//         },
-//         options: {
-//             responsive: true,
-//         },
-//     });
-// });
-
-// document.getElementById("logoutBtn").addEventListener("click", () => {
-//     window.location.href = 'admin-login.html'; // Redirect to admin-login page
-// });
-
-// // Call the fetch functions to load data dynamically
-// fetchUsersFromFirebase();
-// fetchStationsFromFirebase();
-// admin.js (FULL CORRECTED CODE)
-
-// ** 1. ADD SECURITY CHECK **
-// Check if user is logged in (using session storage as set in admin-login.js fix)
-if (sessionStorage.getItem('isAdminLoggedIn') !== 'true') {
-    window.location.href = 'admin-login.html'; 
+// 🔐 Simple admin "auth" check (session flag from admin-login.html)
+if (sessionStorage.getItem("isAdminLoggedIn") !== "true") {
+  window.location.href = "admin-login.html";
 }
 
-// Tabs functionality
-const tabs = document.querySelectorAll(".sidebar ul li");
-const tabContents = document.querySelectorAll(".tab-content");
-
-tabs.forEach((tab, index) => {
-    tab.addEventListener("click", () => {
-        tabs.forEach((t) => t.classList.remove("active"));
-        tabContents.forEach((tc) => tc.classList.remove("active"));
-        tab.classList.add("active");
-        tabContents[index].classList.add("active");
-    });
-});
-
-// ** 2. STANDARDIZE FIREBASE CONFIG **
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyB_d-uzdhnhA_MNtLRNxI_9Cq2Eq3qpdGA",
   authDomain: "zapgo-admin-app.firebaseapp.com",
@@ -170,140 +22,204 @@ const firebaseConfig = {
   storageBucket: "zapgo-admin-app.firebasestorage.app",
   messagingSenderId: "109873838158",
   appId: "1:109873838158:web:b7d723030c2f447628ab1f",
-  measurementId: "G-WG25REDHXT"
+  measurementId: "G-WG25REDHXT",
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const database = firebase.database();
+// Init Firebase + Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-// DOM Elements
+// DOM elements
 const usersTable = document.getElementById("usersTable");
-const stationSelect = document.getElementById("stationSelect"); // Get select element for notifications
-
-// Fetch and display registered users from Realtime Database
-function fetchUsersFromFirebase() {
-    const usersRef = database.ref("users");
-    usersRef.on("value", (snapshot) => {
-        usersTable.innerHTML = "";
-        snapshot.forEach((childSnapshot) => {
-            const user = childSnapshot.val();
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td>${childSnapshot.key}</td>
-                <td>${user.displayName || user.name || 'N/A'}</td> 
-                <td>${user.email || 'N/A'}</td>
-                <td>
-                    <button class="delete-btn" onclick="deleteUser('${childSnapshot.key}')">Delete</button>
-                </td>
-            `;
-            usersTable.appendChild(row);
-        });
-    });
-}
-
-// Delete a user from Firebase
-function deleteUser(userId) {
-    if (confirm("Are you sure you want to delete this user?")) {
-        database
-            .ref("users/" + userId)
-            .remove()
-            .then(() => alert("User deleted successfully!"))
-            .catch((error) => console.error("Error deleting user:", error.message));
-    }
-}
-
-// Charging stations management
-const addStationForm = document.getElementById("addStationForm");
+const stationSelect = document.getElementById("stationSelect");
 const stationsList = document.getElementById("stationsList");
+const addStationForm = document.getElementById("addStationForm");
+const notificationForm = document.getElementById("notificationForm");
+const logoutBtn = document.getElementById("logoutBtn");
 
-addStationForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const stationName = document.getElementById("stationName").value;
-    const stationLocation = document.getElementById("stationLocation").value;
+// ---------- TAB LOGIC ----------
+const tabs = document.querySelectorAll(".sidebar ul li");
+const tabContents = document.querySelectorAll(".tab-content");
 
-    const stationRef = database.ref("stations").push();
-    stationRef
-        .set({
-            name: stationName,
-            location: stationLocation,
-        })
-        .then(() => {
-            addStationForm.reset();
-            // No need to manually add to list; fetchStationsFromFirebase handles refresh
-        })
-        .catch((error) => console.error("Error adding station:", error.message));
+tabs.forEach((tab, index) => {
+  tab.addEventListener("click", () => {
+    tabs.forEach((t) => t.classList.remove("active"));
+    tabContents.forEach((tc) => tc.classList.remove("active"));
+    tab.classList.add("active");
+    tabContents[index].classList.add("active");
+  });
 });
 
-// Fetch and display charging stations 
-function fetchStationsFromFirebase() {
-    const stationsRef = database.ref("stations");
-    stationsRef.on("value", (snapshot) => {
-        stationsList.innerHTML = "";
-        stationSelect.innerHTML = '<option value="" disabled selected>Select a Charging Station</option>';
+// ---------- LOGOUT ----------
+logoutBtn.addEventListener("click", () => {
+  sessionStorage.removeItem("isAdminLoggedIn");
+  window.location.href = "admin-login.html";
+});
 
-        snapshot.forEach((childSnapshot) => {
-            const station = childSnapshot.val();
-            
-            // Populate stations list
-            const listItem = document.createElement("li");
-            listItem.textContent = `${station.name} - ${station.location}`;
-            stationsList.appendChild(listItem);
-            
-            // Populate select dropdown
-            const option = document.createElement("option");
-            option.value = childSnapshot.key;
-            option.textContent = station.name;
-            stationSelect.appendChild(option);
-        });
+// ---------- USERS (Firestore: users collection) ----------
+async function loadUsers() {
+  try {
+    const snap = await getDocs(collection(db, "users"));
+    usersTable.innerHTML = "";
+
+    snap.forEach((docSnap) => {
+      const user = docSnap.data();
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${docSnap.id}</td>
+        <td>${user.displayName || user.name || "N/A"}</td>
+        <td>${user.email || "N/A"}</td>
+        <td>
+          <button class="delete-btn" onclick="deleteUser('${docSnap.id}')">Delete</button>
+        </td>
+      `;
+      usersTable.appendChild(row);
     });
+  } catch (err) {
+    console.error("Error loading users:", err);
+  }
 }
 
-// ** 3. CORRECT LOGOUT FUNCTIONALITY **
-document.getElementById("logoutBtn").addEventListener("click", () => {
-    sessionStorage.removeItem('isAdminLoggedIn'); // Clear the session flag
-    // Firebase sign out (optional, since it's a simulated admin login)
-    // firebase.auth().signOut().then(() => {
-        window.location.href = 'admin-login.html'; // Redirect to admin login page
-    // });
-});
+async function deleteUser(userId) {
+  if (!confirm("Are you sure you want to delete this user?")) return;
+  try {
+    await deleteDoc(doc(db, "users", userId));
+    alert("User deleted successfully!");
+    // Reload users table
+    loadUsers();
+  } catch (err) {
+    console.error("Error deleting user:", err);
+  }
+}
 
-// Notification form placeholder 
-document.getElementById('notificationForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const selectedStation = document.getElementById('stationSelect').value;
-    const message = document.getElementById('notificationMessage').value;
+// expose deleteUser so onclick works
+window.deleteUser = deleteUser;
 
-    if (!selectedStation) {
-        alert("Please select a charging station first.");
-        return;
-    }
-    alert(`Notification sent to station ${selectedStation} (simulated)! Message: ${message}`);
-    document.getElementById('notificationForm').reset();
-});
+// ---------- STATIONS (Firestore: stations collection) ----------
+async function loadStations() {
+  try {
+    const snap = await getDocs(collection(db, "stations"));
+    stationsList.innerHTML = "";
+    stationSelect.innerHTML =
+      '<option value="" disabled selected>Select a Charging Station</option>';
 
-// Statistics (Chart.js placeholder)
-document.addEventListener("DOMContentLoaded", () => {
-    const ctx = document.getElementById("statsChart").getContext("2d");
+    snap.forEach((docSnap) => {
+      const station = docSnap.data();
 
-    new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-            datasets: [
-                {
-                    label: "Bookings",
-                    data: [10, 15, 7, 20, 30, 25],
-                    backgroundColor: "#1fb800",
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-        },
+      // List item
+      const li = document.createElement("li");
+      li.textContent = `${station.name} - ${station.location}`;
+      stationsList.appendChild(li);
+
+      // Dropdown option
+      const option = document.createElement("option");
+      option.value = docSnap.id;
+      option.textContent = station.name;
+      stationSelect.appendChild(option);
     });
+  } catch (err) {
+    console.error("Error loading stations:", err);
+  }
+}
+
+addStationForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const stationName = document.getElementById("stationName").value.trim();
+  const stationLocation = document.getElementById("stationLocation").value.trim();
+
+  if (!stationName || !stationLocation) {
+    alert("Please enter station name and location.");
+    return;
+  }
+
+  try {
+    await addDoc(collection(db, "stations"), {
+      name: stationName,
+      location: stationLocation,
+    });
+    addStationForm.reset();
+    loadStations();
+  } catch (err) {
+    console.error("Error adding station:", err);
+  }
 });
 
-// Call the fetch functions to load data dynamically
-fetchUsersFromFirebase();
-fetchStationsFromFirebase();
+// ---------- NOTIFICATIONS (simulated) ----------
+notificationForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const selectedStation = stationSelect.value;
+  const message = document.getElementById("notificationMessage").value.trim();
+
+  if (!selectedStation) {
+    alert("Please select a charging station first.");
+    return;
+  }
+
+  if (!message) {
+    alert("Enter a notification message.");
+    return;
+  }
+
+  alert(
+    `Notification sent to station ${selectedStation} (simulated).\nMessage: ${message}`
+  );
+  notificationForm.reset();
+});
+
+// ---------- STATS (Firestore: bookings collection) ----------
+let statsChart = null;
+
+function initStatsChart() {
+  const ctx = document.getElementById("statsChart").getContext("2d");
+  statsChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "Bookings per day",
+          data: [],
+          backgroundColor: "#1fb800",
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+    },
+  });
+
+  // Live updates from Firestore
+  const bookingsCol = collection(db, "bookings");
+  onSnapshot(bookingsCol, (snapshot) => {
+    const dailyCounts = {}; // "YYYY-MM-DD" -> count
+
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (!data.createdAt) return;
+
+      const d = new Date(data.createdAt);
+      if (isNaN(d)) return;
+
+      const key =
+        d.getFullYear() +
+        "-" +
+        String(d.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(d.getDate()).padStart(2, "0");
+
+      dailyCounts[key] = (dailyCounts[key] || 0) + 1;
+    });
+
+    const labels = Object.keys(dailyCounts).sort();
+    const values = labels.map((k) => dailyCounts[k]);
+
+    statsChart.data.labels = labels;
+    statsChart.data.datasets[0].data = values;
+    statsChart.update();
+  });
+}
+
+// ---------- INITIAL LOAD ----------
+loadUsers();
+loadStations();
+initStatsChart();
