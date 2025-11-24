@@ -43,6 +43,15 @@
             <!-- Sidebar Planning UI -->
             <div class="w-80 bg-gray-50 p-5 shadow-xl border-r z-50 overflow-y-auto h-full">
 
+                <!-- USER PROFILE BOX -->
+                <div class="flex items-center gap-3 p-3 mb-4 bg-white rounded shadow">
+                    <img id="userPhoto" class="w-12 h-12 rounded-full border" />
+                    <div>
+                        <p id="userName" class="font-semibold text-gray-800"></p>
+                        <p id="userEmail" class="text-xs text-gray-500"></p>
+                    </div>
+                </div>
+
                 <label class="text-xs font-semibold text-gray-700 uppercase">Starting Point</label>
                 <input id="start" class="w-full p-2 border rounded mb-3" placeholder="e.g. New Delhi">
 
@@ -73,9 +82,11 @@
                 </div>
 
                 <button id="planRoute"
-                    class="w-full bg-black text-white py-3 rounded font-semibold hover:bg-gray-800 transition">
-                    Plan Route
-                </button>
+    class="w-full bg-black text-white py-3 rounded font-semibold hover:bg-gray-800 transition flex items-center justify-center gap-2">
+    <span id="planRouteText">Plan Route</span>
+    <span id="planLoader" class="hidden animate-spin border-2 border-white border-t-transparent w-5 h-5 rounded-full"></span>
+</button>
+
 
                 <!-- Trip Summary Section -->
                 <div id="routeDetails" class="hidden mt-5 space-y-4">
@@ -255,6 +266,58 @@
     }
 </script>
 
+<!-- Loader Script -->
+ <script>
+    // Load Google User Info into Sidebar
+    document.getElementById("userName").innerText =
+        localStorage.getItem("userName") || "User";
+
+    document.getElementById("userEmail").innerText =
+        localStorage.getItem("userEmail") || "";
+
+    document.getElementById("userPhoto").src =
+        localStorage.getItem("userPhoto") ||
+        "https://via.placeholder.com/100";
+
+    // Attach loading animation to Plan Route button
+    const btn = document.getElementById("planRoute");
+    const text = document.getElementById("planRouteText");
+    const loader = document.getElementById("planLoader");
+
+    window.startRouteLoading = function () {
+        btn.disabled = true;
+        text.classList.add("hidden");
+        loader.classList.remove("hidden");
+    };
+
+    window.stopRouteLoading = function () {
+        btn.disabled = false;
+        text.classList.remove("hidden");
+        loader.classList.add("hidden");
+    };
+</script>
+
+
+<!-- Toast Notif added -->
+<div id="toast"
+    class="fixed bottom-5 right-5 p-4 rounded shadow-lg hidden text-white font-semibold z-[2000] transition">
+</div>
+
+<script>
+    function showToast(message, type = "success") {
+        const toast = document.getElementById("toast");
+        toast.innerText = message;
+
+        toast.classList.remove("hidden");
+
+        if (type === "success") toast.style.background = "#16a34a"; // green
+        if (type === "error") toast.style.background = "#dc2626";   // red
+
+        setTimeout(() => {
+            toast.classList.add("hidden");
+        }, 2500);
+    }
+</script>
 
 </body>
 
