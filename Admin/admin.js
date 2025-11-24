@@ -7,9 +7,11 @@ import {
   deleteDoc,
   doc,
   onSnapshot,
+  updateDoc,        
 } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-// 🔐 Simple admin "auth" check (session flag from admin-login.html)
+
+// admin "auth" check
 if (sessionStorage.getItem("isAdminLoggedIn") !== "true") {
   window.location.href = "admin-login.html";
 }
@@ -33,6 +35,17 @@ const bookingsTable = document.getElementById("bookingsTable");
 
 // DOM elements
 const usersTable = document.getElementById("usersTable");
+// delegate delete clicks to the table
+usersTable.addEventListener("click", (e) => {
+  const btn = e.target.closest(".delete-btn");
+  if (!btn) return;
+
+  const userId = btn.dataset.userId;
+  if (!userId) return;
+
+  deleteUser(userId);
+});
+
 const stationSelect = document.getElementById("stationSelect");
 const stationsList = document.getElementById("stationsList");
 const addStationForm = document.getElementById("addStationForm");
@@ -68,13 +81,14 @@ async function loadUsers() {
       const user = docSnap.data();
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${docSnap.id}</td>
-        <td>${user.displayName || user.name || "N/A"}</td>
-        <td>${user.email || "N/A"}</td>
-        <td>
-          <button class="delete-btn" onclick="deleteUser('${docSnap.id}')">Delete</button>
-        </td>
-      `;
+            <td>${docSnap.id}</td>
+            <td>${user.displayName || user.name || "N/A"}</td>
+            <td>${user.email || "N/A"}</td>
+            <td>
+            <button class="delete-btn" data-user-id="${docSnap.id}">Delete</button>
+            </td>
+        `;
+
       usersTable.appendChild(row);
     });
   } catch (err) {
@@ -84,18 +98,17 @@ async function loadUsers() {
 
 async function deleteUser(userId) {
   if (!confirm("Are you sure you want to delete this user?")) return;
+
   try {
     await deleteDoc(doc(db, "users", userId));
     alert("User deleted successfully!");
-    // Reload users table
-    loadUsers();
+    loadUsers(); // reload table
   } catch (err) {
     console.error("Error deleting user:", err);
+    alert("Failed to delete user: " + err.message);
   }
 }
 
-// expose deleteUser so onclick works
-window.deleteUser = deleteUser;
 
 // ---------- STATIONS (Firestore: stations collection) ----------
 async function loadStations() {
@@ -107,16 +120,31 @@ async function loadStations() {
 
     snap.forEach((docSnap) => {
       const station = docSnap.data();
+      const id = docSnap.id;
 
-      // List item
+      // List item with Edit + Delete buttons
       const li = document.createElement("li");
-      li.textContent = `${station.name} - ${station.location}`;
+      li.className = "station-row";
+      li.dataset.id = id;
+      li.dataset.name = station.name || "";
+      li.dataset.location = station.location || "";
+
+      li.innerHTML = `
+        <div class="station-info">
+          <span class="station-name">${station.name || "Unnamed"}</span>
+          <span class="station-location"> - ${station.location || "-"}</span>
+        </div>
+        <div class="station-actions">
+          <button class="edit-station-btn" data-id="${id}">Edit</button>
+          <button class="delete-station-btn" data-id="${id}">Delete</button>
+        </div>
+      `;
       stationsList.appendChild(li);
 
-      // Dropdown option
+      // Populate dropdown as before
       const option = document.createElement("option");
-      option.value = docSnap.id;
-      option.textContent = station.name;
+      option.value = id;
+      option.textContent = station.name || "Station";
       stationSelect.appendChild(option);
     });
   } catch (err) {
@@ -124,27 +152,78 @@ async function loadStations() {
   }
 }
 
-addStationForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const stationName = document.getElementById("stationName").value.trim();
-  const stationLocation = document.getElementById("stationLocation").value.trim();
+// handle edit/delete clicks on stations list
+stationsList.addEventListener("click", (e) => {
+  const deleteBtn = e.target.closest(".delete-station-btn");
+  const editBtn = e.target.closest(".edit-station-btn");
 
-  if (!stationName || !stationLocation) {
-    alert("Please enter station name and location.");
+  if (deleteBtn) {
+    const id = deleteBtn.dataset.id;
+    if (id) deleteStation(id);
     return;
   }
 
-  try {
-    await addDoc(collection(db, "stations"), {
-      name: stationName,
-      location: stationLocation,
-    });
-    addStationForm.reset();
-    loadStations();
-  } catch (err) {
-    console.error("Error adding station:", err);
+  if (editBtn) {
+    const id = editBtn.dataset.id;
+    if (id) editStation(id, editBtn);
   }
 });
+
+// handle edit/delete clicks on stations list
+stationsList.addEventListener("click", (e) => {
+  const deleteBtn = e.target.closest(".delete-station-btn");
+  const editBtn = e.target.closest(".edit-station-btn");
+
+  if (deleteBtn) {
+    const id = deleteBtn.dataset.id;
+    if (id) deleteStation(id);
+    return;
+  }
+
+  if (editBtn) {
+    const id = editBtn.dataset.id;
+    if (id) editStation(id, editBtn);
+  }
+});
+
+async function deleteStation(stationId) {
+  if (!confirm("Are you sure you want to delete this station?")) return;
+
+  try {
+    await deleteDoc(doc(db, "stations", stationId));
+    alert("Station deleted successfully!");
+    loadStations(); // refresh UI
+  } catch (err) {
+    console.error("Error deleting station:", err);
+    alert("Failed to delete station: " + err.message);
+  }
+}
+
+async function editStation(stationId, btnElement) {
+  // try to get old values from DOM
+  const li = btnElement.closest("li");
+  const prevName = li?.dataset.name || "";
+  const prevLocation = li?.dataset.location || "";
+
+  const newName = prompt("Edit station name:", prevName);
+  if (newName === null) return; // cancelled
+
+  const newLocation = prompt("Edit station location:", prevLocation);
+  if (newLocation === null) return; // cancelled
+
+  try {
+    await updateDoc(doc(db, "stations", stationId), {
+      name: newName.trim(),
+      location: newLocation.trim(),
+    });
+    alert("Station updated successfully!");
+    loadStations(); // refresh UI
+  } catch (err) {
+    console.error("Error updating station:", err);
+    alert("Failed to update station: " + err.message);
+  }
+}
+
 
 
 // ---------- BOOKINGS (Firestore: bookings collection) ----------
