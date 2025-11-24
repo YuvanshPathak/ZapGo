@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let map, routingControl;
     const useDynamicCharging = true;
-    const fixedChargeTime = 30;
+    const fixedChargeTime = 30; // minutes
 
     function initMap() {
         map = L.map("map").setView([20.5937, 78.9629], 5);
@@ -34,9 +34,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function formatTime(mins) {
-        const d = new Date();
-        d.setMinutes(d.getMinutes() + mins);
+    // baseDate: Date, offsetMins: number
+    function formatTime(baseDate, offsetMins) {
+        const d = new Date(baseDate.getTime());
+        d.setMinutes(d.getMinutes() + offsetMins);
         return d.toTimeString().split(":").slice(0, 2).join(":");
     }
 
@@ -47,6 +48,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const start = document.getElementById("start").value.trim();
         const end = document.getElementById("end").value.trim();
 
+        const hoursInput = parseInt(document.getElementById("hours").value, 10);
+        const minutesInput = parseInt(document.getElementById("minutes").value, 10);
+        const ampm = document.getElementById("ampm").value;
+
+        // basic validation
         if (!start || !end) {
             if (typeof stopRouteLoading === "function") stopRouteLoading();
             if (typeof showToast === "function") {
@@ -56,6 +62,31 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             return;
         }
+
+        if (
+            isNaN(hoursInput) ||
+            isNaN(minutesInput) ||
+            hoursInput < 1 ||
+            hoursInput > 12 ||
+            minutesInput < 0 ||
+            minutesInput > 59
+        ) {
+            if (typeof stopRouteLoading === "function") stopRouteLoading();
+            if (typeof showToast === "function") {
+                showToast("Enter a valid journey start time!", "error");
+            } else {
+                alert("Enter a valid journey start time!");
+            }
+            return;
+        }
+
+        // convert to 24-hour clock
+        let hours24 = hoursInput % 12;
+        if (ampm === "PM") hours24 += 12;
+
+        // base journey start Date (today, user-provided time)
+        const journeyStart = new Date();
+        journeyStart.setHours(hours24, minutesInput, 0, 0);
 
         const startC = await getCoordinates(start);
         const endC = await getCoordinates(end);
@@ -85,13 +116,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const summary = route.summary;
 
             const totalDist = summary.totalDistance / 1000;     // km
-            const totalTimeHrs = summary.totalTime / 3600;      // hours (you chose hrs)
+            const totalTimeHrs = summary.totalTime / 3600;      // hours
 
             document.getElementById("totalDist").innerText = totalDist.toFixed(1);
             document.getElementById("totalTime").innerText = Math.round(totalTimeHrs);
             document.getElementById("routeDetails").classList.remove("hidden");
 
-            await calculateStops(route, totalDist, totalTimeHrs);
+            await calculateStops(route, totalDist, totalTimeHrs, journeyStart);
 
             if (typeof stopRouteLoading === "function") stopRouteLoading();
             if (typeof showToast === "function") {
@@ -111,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    async function calculateStops(route, totalDist, totalTimeHrs) {
+    async function calculateStops(route, totalDist, totalTimeHrs, journeyStart) {
         const range = +document.getElementById("range").value || 250;
         const stopsDiv = document.getElementById("chargingStops");
         stopsDiv.innerHTML = "";
@@ -125,29 +156,43 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const coords = route.coordinates;
+        const segmentMinutes = (totalTimeHrs * 60) / stopsCount;
 
         for (let i = 1; i <= stopsCount; i++) {
             const idx = Math.floor((i * range / totalDist) * coords.length);
             const point = coords[idx];
 
             const locName = await reverseGeocode(point.lat, point.lng);
-            const arrivalTime = formatTime(i * (totalTimeHrs * 60 / stopsCount)); // convert hrs → mins
 
+            // elapsed minutes from journey start to this stop
+            const elapsedToStop = i * segmentMinutes;
+
+            const arrivalTime = formatTime(journeyStart, elapsedToStop);
+
+            // chargeDur in MINUTES
             const chargeDur = useDynamicCharging
                 ? Math.min(60, 30 + Math.floor(totalDist / range))
                 : fixedChargeTime;
+
+            const departureTime = formatTime(journeyStart, elapsedToStop + chargeDur);
 
             stopsDiv.innerHTML += `
                 <div class="bg-white p-3 rounded shadow-sm mb-2">
                     <p class="font-bold">${locName}</p>
                     <p class="text-sm">Arrival: ${arrivalTime}</p>
-                    <p class="text-sm">Charge: ${chargeDur} hrs</p>
+                    <p class="text-sm">Departure: ${departureTime}</p>
+                    <p class="text-sm">Charge: ${chargeDur} mins</p>
                 </div>
             `;
 
             L.marker([point.lat, point.lng])
                 .addTo(map)
-                .bindPopup(`<b>${locName}</b><br>Arrival: ${arrivalTime}<br>Charge: ${chargeDur} mins`);
+                .bindPopup(
+                    `<b>${locName}</b><br>
+                     Arrival: ${arrivalTime}<br>
+                     Departure: ${departureTime}<br>
+                     Charge: ${chargeDur} mins`
+                );
         }
     }
 
