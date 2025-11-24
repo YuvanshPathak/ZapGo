@@ -37,10 +37,11 @@
             </div>
         </nav>
 
-        <div class="flex flex-1 relative">
+            <div class="flex flex-1 relative min-h-0">
+
 
             <!-- Sidebar Planning UI -->
-            <div class="w-80 bg-gray-50 p-5 shadow-xl border-r z-50 overflow-y-auto">
+            <div class="w-80 bg-gray-50 p-5 shadow-xl border-r z-50 overflow-y-auto h-full">
 
                 <label class="text-xs font-semibold text-gray-700 uppercase">Starting Point</label>
                 <input id="start" class="w-full p-2 border rounded mb-3" placeholder="e.g. New Delhi">
@@ -81,7 +82,7 @@
                     <div class="bg-blue-100 p-3 rounded text-blue-800">
                         <p class="font-bold text-sm"><i class="bi bi-geo-alt"></i> Trip Summary</p>
                         <p>Distance: <span id="totalDist" class="font-bold">0</span> km</p>
-                        <p>Est. Time: <span id="totalTime" class="font-bold">0</span> mins</p>
+                        <p>Est. Time: <span id="totalTime" class="font-bold">0</span> hrs</p>
                     </div>
 
                     <h3 class="font-semibold text-sm">Suggested Charging Stops:</h3>
@@ -93,6 +94,15 @@
                     </button>
                 </div>
 
+                <!-- My Bookings section -->
+                <div id="myBookings" class="mt-5 bg-white rounded-lg shadow p-3">
+                <h3 class="font-semibold text-sm mb-2">My Bookings</h3>
+                <div id="myBookingsList" class="space-y-2 text-xs text-gray-700">
+                    <p class="text-gray-400">No bookings yet.</p>
+                </div>
+            </div>
+
+
             </div>
 
             <!-- Map Display Section -->
@@ -103,8 +113,11 @@
         </div>
     </div>
 
+
+
+    <!-- AGAR fuckUP hoye toh neece wale ko wapis laana -->
     <!-- Firebase -->
-    <script type="module">
+    <!-- <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore.js";
 
@@ -131,12 +144,117 @@
             });
             alert("Booking confirmed!");
         });
-    </script>
+    </script> -->
 
     <!-- Leaflet Map Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script src="script.js"></script>
+
+    <!-- HERE IS THE YUVANSH FIREBASE SCRIPT -->
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB_d-uzdhnhA_MNtLRNxI_9Cq2Eq3qpdGA",
+    authDomain: "zapgo-admin-app.firebaseapp.com",
+    projectId: "zapgo-admin-app",
+    storageBucket: "zapgo-admin-app.firebasestorage.app",
+    messagingSenderId: "109873838158",
+    appId: "1:109873838158:web:b7d723030c2f447628ab1f",
+    measurementId: "G-WG25REDHXT"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  const bookBtn = document.getElementById("bookAll");
+  const bookingsList = document.getElementById("myBookingsList");
+
+  function renderBookings(list) {
+    if (!bookingsList) return;
+    bookingsList.innerHTML = "";
+    list.forEach((b) => {
+      const div = document.createElement("div");
+      div.className = "border rounded-md px-2 py-1";
+      div.innerHTML = `
+        <div class="font-medium">${b.from} → ${b.to}</div>
+        <div class="text-xs text-gray-600">
+          Distance: ${b.dist} km • Time: ${b.time} mins<br/>
+          Booked at: ${b.createdAt}
+        </div>
+      `;
+      bookingsList.appendChild(div);
+    });
+  }
+
+  // restore previous bookings from localStorage
+  const saved = JSON.parse(localStorage.getItem("zapgoBookings") || "[]");
+  if (saved.length > 0) renderBookings(saved);
+
+  bookBtn.addEventListener("click", async () => {
+    const from = document.getElementById("start").value || "-";
+    const to = document.getElementById("end").value || "-";
+    const dist = document.getElementById("totalDist").innerText || "-";
+    const time = document.getElementById("totalTime").innerText || "-";
+
+    if (!from || !to || dist === "-" || time === "-") {
+      alert("Please plan a route before booking.");
+      return;
+    }
+
+    const booking = {
+      from,
+      to,
+      dist,
+      time,
+      createdAt: new Date().toLocaleString(),
+    };
+
+    // localStorage for UI + viva demo
+    const existing = JSON.parse(localStorage.getItem("zapgoBookings") || "[]");
+    existing.push(booking);
+    localStorage.setItem("zapgoBookings", JSON.stringify(existing));
+    renderBookings(existing);
+
+    // Firestore (best-effort, non-blocking)
+    try {
+      await addDoc(collection(db, "bookings"), {
+        email: localStorage.getItem("userEmail") || null,
+        start: from,
+        destination: to,
+        distance: dist,
+        durationMinutes: time,
+        createdAt: new Date().toISOString(),
+      });
+    } catch (err) {
+      console.error("Firestore booking save failed:", err);
+    }
+
+    alert("Booking confirmed!");
+  });
+</script>
+<!-- Logout button -->
+ <script>
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+            // Clear login session
+            localStorage.removeItem("userEmail");
+            localStorage.removeItem("userName");
+            localStorage.removeItem("userPhoto");
+            localStorage.removeItem("zapgoBookings");
+
+            // Redirect to login page
+            window.location.href = "index.html"; // change if your login page is named differently
+        });
+    } else {
+        console.error("Logout button NOT FOUND in DOM");
+    }
+</script>
+
 
 </body>
 

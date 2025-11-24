@@ -66,7 +66,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const summary = route.summary;
 
             const totalDist = summary.totalDistance / 1000;
-            const totalTimeMin = summary.totalTime / 60;
+            //CHNAGES BY YUVANSH
+            const totalTimeMin = summary.totalTime/3600;
 
             document.getElementById("totalDist").innerText = totalDist.toFixed(1);
             document.getElementById("totalTime").innerText = Math.round(totalTimeMin);
