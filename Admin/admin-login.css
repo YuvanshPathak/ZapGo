@@ -1,96 +1,189 @@
-/* General Styles */
+/* RESET-ish */
+* {
+  box-sizing: border-box;
+}
+
 body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #0e0e0e, #474646);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    color: #333;
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top, #111827 0, #020617 45%, #000 100%);
+  color: #e5e7eb;
 }
 
-/* Login Container */
+/* Container centers the card */
 .login-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  max-width: 420px;
+  padding: 1rem;
 }
 
-/* Login Card */
+/* Card matches admin glass style */
 .login-card {
-    background-color: #ffffff;
-    border-radius: 10px;
-    padding: 2rem;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 100%;
-    max-width: 400px;
+  position: relative;
+  background: radial-gradient(circle at top left, #1e293b 0, #020617 60%);
+  border-radius: 18px;
+  padding: 2.2rem 2rem;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  overflow: hidden;
+  animation: fadeUp 0.6s ease-out;
+}
+
+/* subtle glow ring */
+.login-card::before {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(36, 73, 241, 0.36), transparent 70%);
+  top: -80px;
+  right: -60px;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-card h2 {
-    margin-bottom: 1.5rem;
-    font-weight: 700;
-    color: #333;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.25rem;
+  color: #f9fafb;
 }
 
-/* Input Group */
+.login-card::after {
+  content: "Admin Portal";
+  display: block;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #9ca3af;
+  margin-bottom: 1.4rem;
+}
+
+/* Form structure */
 .input-group {
-    margin-bottom: 1.2rem;
-    text-align: left;
-    padding-right: 25px;
+  margin-bottom: 1rem;
 }
 
 .input-group label {
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    display: block;
-    font-size: 0.9rem;
-    color: #555;
+  display: block;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+  color: #9ca3af;
+  font-weight: 600;
 }
 
 .input-group input {
-    width: 100%;
-    padding: 0.8rem;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    outline: none;
-    font-size: 1rem;
-    transition: border 0.3s;
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.55);
+  background: rgba(15, 23, 42, 0.95);
+  color: #e5e7eb;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.input-group input::placeholder {
+  color: #6b7280;
 }
 
 .input-group input:focus {
-    border: 1px solid #2575fc;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35);
+  background: rgba(15, 23, 42, 1);
 }
 
-/* Error Message */
 .error-message {
-    font-size: 0.9rem;
-    color: red;
-    margin-bottom: 1rem;
-    display: none;
+  font-size: 0.85rem;
+  color: #f97373;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+
+.hidden {
+  display: none;
 }
 
 /* Button */
-button {
-    background-color: #2575fc;
-    color: #fff;
-    padding: 0.8rem 1.5rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+#loginButton {
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #f9fafb;
+  box-shadow: 0 12px 30px rgba(34, 197, 94, 0.35);
+  transition: all 0.2s ease;
 }
 
-button:hover {
-    background-color: #6a11cb;
+#loginButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 35px rgba(34, 197, 94, 0.45);
 }
 
-/* Hidden Error */
-.hidden {
-    display: none;
+#loginButton:active {
+  transform: translateY(0);
+  box-shadow: 0 10px 22px rgba(34, 197, 94, 0.35);
+}
+
+.login-hint {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-align: center;
+}
+
+/* Mobile tweaks */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 1.8rem 1.3rem;
+  }
+}
+
+/* === STAR BACKGROUND FOR ADMIN LOGIN === */
+.stars-bg {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: -1;
+  background: radial-gradient(circle at top, #020617 0, #000 55%);
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: #e5e7eb;
+  opacity: 0.8;
+  border-radius: 50%;
+  animation: twinkle 3s infinite ease-in-out;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.8); }
 }
