@@ -179,7 +179,6 @@
     const time = document.getElementById("totalTime").innerText || "-";
 
     if (!from || !to || dist === "-" || time === "-") {
-      // keep this simple, we just want it to work
       alert("Please plan a route before booking.");
       return;
     }
@@ -192,29 +191,33 @@
       createdAt: new Date().toLocaleString(),
     };
 
-    // ➜ ALWAYS update local UI + localStorage first
+    // 1 Update UI + localStorage
     const existing = JSON.parse(localStorage.getItem("zapgoBookings") || "[]");
     existing.push(booking);
     localStorage.setItem("zapgoBookings", JSON.stringify(existing));
     renderBookings(existing);
 
-    // ➜ THEN *try* Firestore, but don't break UI if it fails
-    try {
-      const ref = await addDoc(collection(db, "bookings"), {
-        email: localStorage.getItem("userEmail") || null,
-        start: from,
-        destination: to,
-        distance: dist,
-        durationMinutes: time,
-        createdAt: new Date().toISOString(),
-      });
-      console.log("✅ Firestore booking saved with ID:", ref.id);
-    } catch (err) {
-      console.error("❌ Firestore booking save failed:", err);
-      // no alert here; viva doesn’t depend on Firestore
-    }
+    // 2 Try Firestore and LOG everything
+    //console.log("🔥 Trying to save booking to Firestore:", booking);
+    //console.log("UID going into Firestore:", localStorage.getItem("userUID"));
 
-    // use toast if you wired it, else fallback
+
+    try {
+  const ref = await addDoc(collection(db, "bookings"), {
+    uid: localStorage.getItem("userUID") || null,
+    email: localStorage.getItem("userEmail") || null,
+    start: from,
+    destination: to,
+    distance: dist,
+    durationMinutes: time,
+    createdAt: new Date().toISOString(),
+  });
+  console.log("Firestore booking saved with ID:", ref.id);
+} catch (err) {
+  console.error("Firestore booking save failed:", err);
+}
+
+
     if (typeof showToast === "function") {
       showToast("Booking confirmed!");
     } else {
