@@ -163,7 +163,7 @@
     <script src="script.js"></script>
 
     <!-- HERE IS THE YUVANSH FIREBASE SCRIPT -->
-    <script type="module">
+<script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
@@ -211,6 +211,7 @@
     const time = document.getElementById("totalTime").innerText || "-";
 
     if (!from || !to || dist === "-" || time === "-") {
+      // keep this simple, we just want it to work
       alert("Please plan a route before booking.");
       return;
     }
@@ -223,15 +224,15 @@
       createdAt: new Date().toLocaleString(),
     };
 
-    // localStorage for UI + viva demo
+    // ➜ ALWAYS update local UI + localStorage first
     const existing = JSON.parse(localStorage.getItem("zapgoBookings") || "[]");
     existing.push(booking);
     localStorage.setItem("zapgoBookings", JSON.stringify(existing));
     renderBookings(existing);
 
-    // Firestore (best-effort, non-blocking)
+    // ➜ THEN *try* Firestore, but don't break UI if it fails
     try {
-      await addDoc(collection(db, "bookings"), {
+      const ref = await addDoc(collection(db, "bookings"), {
         email: localStorage.getItem("userEmail") || null,
         start: from,
         destination: to,
@@ -239,13 +240,22 @@
         durationMinutes: time,
         createdAt: new Date().toISOString(),
       });
+      console.log("✅ Firestore booking saved with ID:", ref.id);
     } catch (err) {
-      console.error("Firestore booking save failed:", err);
+      console.error("❌ Firestore booking save failed:", err);
+      // no alert here; viva doesn’t depend on Firestore
     }
 
-    alert("Booking confirmed!");
+    // use toast if you wired it, else fallback
+    if (typeof showToast === "function") {
+      showToast("Booking confirmed!");
+    } else {
+      alert("Booking confirmed!");
+    }
   });
 </script>
+
+
 <!-- Logout button -->
  <script>
     const logoutBtn = document.getElementById("logoutBtn");
@@ -623,5 +633,5 @@
 // <!--     
     // <script src="script.js
 // // </body>
-// // </html> -->  -->
+// // </html> -->
 
