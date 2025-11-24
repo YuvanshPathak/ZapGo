@@ -29,7 +29,9 @@
                 <li id="viewUsersTab" class="active">View Users</li>
                 <li id="manageStationsTab">Manage Charging Stations</li>
                 <li id="viewStatsTab">View Statistics</li>
+                <li id="viewBookingsTab">View Bookings</li>
             </ul>
+
         </aside>
 
         <main class="content">
@@ -85,6 +87,27 @@
                 <h2>Booking Statistics</h2>
                 <canvas id="statsChart"></canvas>
             </div>
+
+            <!-- View Bookings Tab -->
+<div id="viewBookings" class="tab-content">
+    <h2>All Bookings</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>User Email</th>
+                <th>From</th>
+                <th>To</th>
+                <th>Distance (km)</th>
+                <th>Duration (hrs)</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody id="bookingsTable">
+            <!-- Filled by admin.js -->
+        </tbody>
+    </table>
+</div>
+
         </main>
     </div>
 

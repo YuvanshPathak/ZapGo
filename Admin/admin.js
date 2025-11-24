@@ -28,6 +28,8 @@ const firebaseConfig = {
 // Init Firebase + Firestore
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const bookingsTable = document.getElementById("bookingsTable");
+
 
 // DOM elements
 const usersTable = document.getElementById("usersTable");
@@ -144,6 +146,75 @@ addStationForm.addEventListener("submit", async (e) => {
   }
 });
 
+// ---------- BOOKINGS (Firestore: bookings collection) ----------
+function loadBookings() {
+  if (!bookingsTable) {
+    console.error("bookingsTable element not found");
+    return;
+  }
+
+  // Live updates with onSnapshot
+  const bookingsRef = collection(db, "bookings");
+
+  onSnapshot(
+    bookingsRef,
+    (snapshot) => {
+      bookingsTable.innerHTML = "";
+
+      if (snapshot.empty) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td colspan="6" style="text-align:center; padding:0.75rem;">
+            No bookings found.
+          </td>
+        `;
+        bookingsTable.appendChild(row);
+        return;
+      }
+
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+
+        const email = data.email || "N/A";
+        const start = data.start || data.source || "-";
+        const dest = data.destination || data.dest || "-";
+        const distance = data.distance || data.dist || "-";
+        const duration = data.durationHours || data.time || "-";
+
+        let createdAt = "-";
+        if (data.createdAt) {
+          const d = new Date(data.createdAt);
+          createdAt = isNaN(d.getTime())
+            ? data.createdAt
+            : d.toLocaleString();
+        }
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${email}</td>
+          <td>${start}</td>
+          <td>${dest}</td>
+          <td>${distance}</td>
+          <td>${duration}</td>
+          <td>${createdAt}</td>
+        `;
+        bookingsTable.appendChild(row);
+      });
+    },
+    (err) => {
+      console.error("Error loading bookings:", err);
+      bookingsTable.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align:center; padding:0.75rem; color:#f97373;">
+            Failed to load bookings.
+          </td>
+        </tr>
+      `;
+    }
+  );
+}
+
+
 // ---------- NOTIFICATIONS (simulated) ----------
 notificationForm.addEventListener("submit", (e) => {
   e.preventDefault();
@@ -223,3 +294,4 @@ function initStatsChart() {
 loadUsers();
 loadStations();
 initStatsChart();
+loadBookings();

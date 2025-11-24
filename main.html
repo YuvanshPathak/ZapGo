@@ -152,21 +152,25 @@
   const bookingsList = document.getElementById("myBookingsList");
 
   function renderBookings(list) {
-    if (!bookingsList) return;
-    bookingsList.innerHTML = "";
-    list.forEach((b) => {
-      const div = document.createElement("div");
-      div.className = "border rounded-md px-2 py-1";
-      div.innerHTML = `
-        <div class="font-medium">${b.from} → ${b.to}</div>
-        <div class="text-xs text-gray-600">
-          Distance: ${b.dist} km • Time: ${b.time} mins<br/>
-          Booked at: ${b.createdAt}
-        </div>
-      `;
-      bookingsList.appendChild(div);
-    });
-  }
+  if (!bookingsList) return;
+  bookingsList.innerHTML = "";
+  list.forEach((b) => {
+    const div = document.createElement("div");
+    div.className = "border rounded-md px-2 py-1";
+
+    const timeDisplay = Number(b.time).toFixed(1); // optional formatting
+
+    div.innerHTML = `
+      <div class="font-medium">${b.from} → ${b.to}</div>
+      <div class="text-xs text-gray-600">
+        Distance: ${b.dist} km • Time: ${timeDisplay} hrs<br/>
+        Booked at: ${b.createdAt}
+      </div>
+    `;
+    bookingsList.appendChild(div);
+  });
+}
+
 
   // restore previous bookings from localStorage
   const saved = JSON.parse(localStorage.getItem("zapgoBookings") || "[]");
@@ -209,7 +213,8 @@
     start: from,
     destination: to,
     distance: dist,
-    durationMinutes: time,
+    //made chnages here Minutes to hours
+    durationHours: time,
     createdAt: new Date().toISOString(),
   });
   console.log("Firestore booking saved with ID:", ref.id);

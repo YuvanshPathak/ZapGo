@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="bg-white p-3 rounded shadow-sm mb-2">
                     <p class="font-bold">${locName}</p>
                     <p class="text-sm">Arrival: ${arrivalTime}</p>
-                    <p class="text-sm">Charge: ${chargeDur} mins</p>
+                    <p class="text-sm">Charge: ${chargeDur} hrs</p>
                 </div>
             `;
 
