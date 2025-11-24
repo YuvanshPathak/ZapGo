@@ -151,23 +151,33 @@ async function loadStations() {
     console.error("Error loading stations:", err);
   }
 }
+// handle "Add Station" form submit
+addStationForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-// handle edit/delete clicks on stations list
-stationsList.addEventListener("click", (e) => {
-  const deleteBtn = e.target.closest(".delete-station-btn");
-  const editBtn = e.target.closest(".edit-station-btn");
+  const stationName = document.getElementById("stationName").value.trim();
+  const stationLocation = document.getElementById("stationLocation").value.trim();
 
-  if (deleteBtn) {
-    const id = deleteBtn.dataset.id;
-    if (id) deleteStation(id);
+  if (!stationName || !stationLocation) {
+    alert("Please enter station name and location.");
     return;
   }
 
-  if (editBtn) {
-    const id = editBtn.dataset.id;
-    if (id) editStation(id, editBtn);
+  try {
+    await addDoc(collection(db, "stations"), {
+      name: stationName,
+      location: stationLocation,
+    });
+
+    alert("Station added successfully!");
+    addStationForm.reset();
+    await loadStations(); // refresh list + dropdown
+  } catch (err) {
+    console.error("Error adding station:", err);
+    alert("Failed to add station: " + err.message);
   }
 });
+
 
 // handle edit/delete clicks on stations list
 stationsList.addEventListener("click", (e) => {
